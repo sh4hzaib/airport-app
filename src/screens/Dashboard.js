@@ -30,7 +30,7 @@ const Dashboard = () => {
   return (
     <View>
       <View style={{}}>
-        <Text style={styles.header}>Select Starting </Text>
+        <Text style={styles.header}>Select Starting Point </Text>
         <Picker
           selectedValue={selectedStartPoint}
           onValueChange={(itemValue, itemIndex) => {
@@ -65,7 +65,7 @@ const Dashboard = () => {
         }}
       >
         <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>
-          Calculate Minimum cost
+          Find Path
         </Text>
       </TouchableOpacity>
       {cost || cost > 0
@@ -80,7 +80,7 @@ const Dashboard = () => {
               )}
             </View>
             <Text style={styles.result}>
-              cost : {cost}
+              Minimum cost : {cost}
             </Text>
           </View>
         : cost === 0 ? Alert.alert("Flight record not found") : null}
