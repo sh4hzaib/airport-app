@@ -1,92 +1,113 @@
-import React, { useCallback, useState } from "react";
-import { View, Text } from "react-native";
-import { TouchableOpacity } from "react-native";
-
-const airports = [
-  {
-    start: "ISB",
-    end: "LHR",
-    cost: 1000
-  },
-  {
-    start: "LHR",
-    end: "NYC",
-    cost: 750
-  },
-  {
-    start: "CBS",
-    end: "NYC",
-    cost: 775
-  },
-  {
-    start: "ISB",
-    end: "CBS",
-    cost: 575
-  },
-  {
-    start: "CBS",
-    end: "GRC",
-    cost: 731
-  },
-  {
-    start: "NYC",
-    end: "GRC",
-    cost: 459
-  }
-];
+import React, { useCallback, useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import airports from "../Data";
+import calculatePath from "../components/calculateMinPath";
 
 const Dashboard = () => {
   const [minPath, setminPath] = useState([]);
+  const [cost, setcost] = useState("");
+  const [selectedStartPoint, setSelectedStartPoint] = useState("ISB");
+  const [selectedDestinationPoint, setSelectedDestinationStartPoint] = useState(
+    "LHR"
+  );
+  const [ap, setAp] = useState([]);
+  const [ep, setEp] = useState([]);
+  useEffect(() => {
+    setAp(["ISB", "LHR", "CBS", "NYC"]);
+    setEp(["LHR", "CBS", "NYC", "GRC"]);
+    return () => {};
+  }, []);
+
   const handleGetMinPath = useCallback((start, end) => {
-    let minCost = 0;
-    let finAr = [];
-    const stAr = airports.filter(airport => airport.start === start);
-    const enAr = airports.filter(airport => airport.end === end);
-    for (let i = 0; i < stAr.length; i++) {
-      if (stAr[i].start === start && stAr[i].end === end) {
-        console.log(stAr[i]);
-        minCost = stAr[i].cost;
-        finAr.push(stAr[i].start, stAr[i].end);
-        break;
-      }
-    }
-    // if direct path is not possible, find the indirect path
-    if (minCost === 0) {
-      stAr.forEach(element => {
-        let cost = 0;
-        for (let i = 0; i < enAr.length; i++) {
-          if (element.end === enAr[i].start) {
-            cost = element.cost + enAr[i].cost;
-            if (minCost === 0) {
-              minCost = cost;
-              finAr = [element.start, element.end, enAr[i].end];
-            } else if (cost < minCost) {
-              minCost = cost;
-              finAr = [element.start, element.end, enAr[i].end];
-            }
-          }
-        }
-      });
-    }
-    console.log("minCost", minCost);
-    console.log(finAr);
-    setminPath(finAr);
+    // console.log(start, end, airports);
+    const result = calculatePath(start, end, airports);
+    // console.log(result);
+    setminPath(result.finAr);
+    setcost(result.minCost);
   }, []);
 
   return (
     <View>
+      <View style={{}}>
+        <Text style={styles.header}>Select Starting </Text>
+        <Picker
+          selectedValue={selectedStartPoint}
+          onValueChange={(itemValue, itemIndex) => {
+            setminPath([""]);
+            setcost("");
+            setSelectedStartPoint(itemValue);
+          }}
+        >
+          {ap.map(airport =>
+            <Picker.Item key={airport} label={airport} value={airport} />
+          )}
+        </Picker>
+        <Text style={styles.header}>Select Destination </Text>
+
+        <Picker
+          selectedValue={selectedDestinationPoint}
+          onValueChange={(itemValue, itemIndex) => {
+            setminPath([""]);
+            setcost("");
+            setSelectedDestinationStartPoint(itemValue);
+          }}
+        >
+          {ep.map(airport =>
+            <Picker.Item key={airport} label={airport} value={airport} />
+          )}
+        </Picker>
+      </View>
       <TouchableOpacity
+        style={styles.button}
         onPress={() => {
-          handleGetMinPath("ISB", "GRC");
+          handleGetMinPath(selectedStartPoint, selectedDestinationPoint);
         }}
       >
-        <Text>Dashboard Screen</Text>
+        <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>
+          Calculate Minimum cost
+        </Text>
       </TouchableOpacity>
-      <Text>
-        {minPath}
-      </Text>
+      {cost || cost > 0
+        ? <View style={{ marginTop: "10%", padding: 10 }}>
+            <View style={{ flexDirection: "row" }}>
+              <Text style={styles.result}>Path: </Text>
+              {minPath.map((path, index) =>
+                <Text key={index} style={styles.result}>
+                  {index > 0 ? " --> " : ""}
+                  {path}
+                </Text>
+              )}
+            </View>
+            <Text style={styles.result}>
+              cost : {cost}
+            </Text>
+          </View>
+        : cost === 0 ? Alert.alert("Flight record not found") : null}
     </View>
   );
 };
 
+const styles = StyleSheet.create({
+  header: {
+    backgroundColor: "blue",
+    fontSize: 18,
+    color: "white",
+    fontWeight: "bold",
+    // textAlign: "center",
+    padding: 20
+  },
+  button: {
+    width: 300,
+    backgroundColor: "blue",
+    padding: 10,
+    alignItems: "center",
+    alignSelf: "center",
+    borderRadius: 10
+  },
+  result: {
+    fontSize: 24,
+    fontWeight: "bold"
+  }
+});
 export default Dashboard;
